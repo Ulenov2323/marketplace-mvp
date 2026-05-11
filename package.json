@@ -1,0 +1,17 @@
+{
+  "name": "hybrid-marketplace-platform",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Hybrid marketplace platform with React frontend, Express API skeleton, PostgreSQL schema, payment abstraction, and Telegram integration layer.",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace frontend",
+    "dev:frontend": "npm run dev --workspace frontend",
+    "dev:backend": "npm run dev --workspace backend",
+    "build": "npm run build --workspace frontend",
+    "start:backend": "npm run start --workspace backend"
+  }
+}
