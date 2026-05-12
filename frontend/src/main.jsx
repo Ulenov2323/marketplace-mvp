@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  ArrowLeft,
   BadgeCheck,
   Bell,
   Check,
@@ -14,6 +15,7 @@ import {
   LifeBuoy,
   Megaphone,
   MessageCircle,
+  PackageCheck,
   Plus,
   Search,
   ShieldCheck,
@@ -59,6 +61,7 @@ function App() {
   const [ads, setAds] = useState(marketplaceSeed.ads);
   const [selectedCategory, setSelectedCategory] = useState("Все");
   const [activeView, setActiveView] = useState("market");
+  const [selectedServiceId, setSelectedServiceId] = useState(null);
   const [draft, setDraft] = useState({
     title: "",
     description: "",
@@ -75,6 +78,7 @@ function App() {
 
   const activeAds = ads.filter((ad) => ad.active);
   const pendingCount = services.filter((service) => service.status === "pending").length;
+  const selectedService = services.find((service) => service.id === selectedServiceId);
   const popularServices = services
     .filter((service) => service.status === "approved")
     .sort((a, b) => b.orders - a.orders)
@@ -136,6 +140,16 @@ function App() {
     setAds((current) => current.map((ad) => (ad.id === id ? { ...ad, active: !ad.active } : ad)));
   }
 
+  function openService(serviceId) {
+    setSelectedServiceId(serviceId);
+    setActiveView("service");
+  }
+
+  function closeService() {
+    setSelectedServiceId(null);
+    setActiveView("market");
+  }
+
   return (
     <main className="min-h-screen overflow-hidden bg-ink pb-20 text-white lg:pb-0">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(139,92,246,0.24),transparent_28%),radial-gradient(circle_at_82%_10%,rgba(56,189,248,0.18),transparent_26%),radial-gradient(circle_at_50%_84%,rgba(244,114,182,0.12),transparent_30%)]" />
@@ -168,10 +182,26 @@ function App() {
                     text="Выбирайте проверенные предложения по продвижению, аккаунтам и рекламе."
                   />
                   <CategoryRail selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} />
-                  <ServiceGrid services={approvedServices} />
+                  <ServiceGrid services={approvedServices} onOpenService={openService} />
                 </div>
                 <CreateServicePanel draft={draft} setDraft={setDraft} createService={createService} />
               </div>
+            </motion.section>
+          )}
+
+          {activeView === "service" && selectedService && (
+            <motion.section
+              key="service"
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+            >
+              <ServiceDetail
+                service={selectedService}
+                relatedServices={popularServices.filter((service) => service.id !== selectedService.id)}
+                onBack={closeService}
+                onOpenService={openService}
+              />
             </motion.section>
           )}
 
@@ -589,17 +619,17 @@ function CategoryRail({ selectedCategory, setSelectedCategory }) {
   );
 }
 
-function ServiceGrid({ services }) {
+function ServiceGrid({ services, onOpenService }) {
   return (
     <div className="grid gap-4 md:grid-cols-2">
       {services.map((service) => (
-        <ServiceCard key={service.id} service={service} />
+        <ServiceCard key={service.id} service={service} onOpenService={onOpenService} />
       ))}
     </div>
   );
 }
 
-function ServiceCard({ service }) {
+function ServiceCard({ service, onOpenService }) {
   return (
     <motion.article
       whileHover={{ y: -5 }}
@@ -633,8 +663,11 @@ function ServiceCard({ service }) {
             </div>
             <p className="mt-1 text-xs text-white/48">{service.reviews.length} отзывов</p>
           </div>
-          <button className="rounded-lg bg-gradient-to-r from-violet via-electric to-rose px-4 py-2 text-sm font-black text-white transition group-hover:scale-[1.03]">
-            Купить
+          <button
+            className="rounded-lg bg-gradient-to-r from-violet via-electric to-rose px-4 py-2 text-sm font-black text-white transition group-hover:scale-[1.03]"
+            onClick={() => onOpenService(service.id)}
+          >
+            Подробнее
           </button>
         </div>
         {service.reviews[0] && (
@@ -644,6 +677,151 @@ function ServiceCard({ service }) {
         )}
       </div>
     </motion.article>
+  );
+}
+
+function ServiceDetail({ service, relatedServices, onBack, onOpenService }) {
+  const packageItems = [
+    "Проверка задачи и бриф перед стартом",
+    "Выполнение услуги по заявленным условиям",
+    "Отчет о результате и рекомендации по следующему шагу"
+  ];
+
+  return (
+    <div className="space-y-6">
+      <button
+        className="inline-flex items-center gap-2 rounded-lg border border-line bg-white/7 px-4 py-2 text-sm font-bold text-white transition hover:bg-white/12"
+        onClick={onBack}
+      >
+        <ArrowLeft className="size-4" />
+        Назад в маркетплейс
+      </button>
+
+      <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <article className="overflow-hidden rounded-lg border border-line bg-white/8 shadow-card backdrop-blur">
+          <div className="h-2 bg-gradient-to-r from-violet via-electric to-rose" />
+          <div className="p-5 sm:p-7">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full bg-violet/18 px-3 py-1 text-xs font-bold text-violet">
+                {service.category}
+              </span>
+              {service.badges.map((badge) => (
+                <Badge key={badge} label={badge} />
+              ))}
+            </div>
+
+            <h1 className="mt-5 max-w-3xl text-3xl font-black leading-tight sm:text-5xl">
+              {service.title}
+            </h1>
+            <p className="mt-4 max-w-3xl text-sm leading-7 text-white/62 sm:text-base">
+              {service.description}
+            </p>
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-3">
+              <DetailMetric icon={<Star className="size-5 fill-rose text-rose" />} value={service.ownerRating} label="рейтинг продавца" />
+              <DetailMetric icon={<ShoppingBag className="size-5 text-electric" />} value={service.orders} label="заказов выполнено" />
+              <DetailMetric icon={<Clock3 className="size-5 text-violet" />} value={service.delivery} label="срок выполнения" />
+            </div>
+
+            <div className="mt-7 rounded-lg border border-line bg-black/20 p-5">
+              <h2 className="text-xl font-black">Что входит в услугу</h2>
+              <div className="mt-4 grid gap-3">
+                {packageItems.map((item) => (
+                  <div key={item} className="flex gap-3 rounded-lg border border-line bg-white/5 p-3 text-sm text-white/66">
+                    <PackageCheck className="mt-0.5 size-4 shrink-0 text-electric" />
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-7 rounded-lg border border-line bg-black/20 p-5">
+              <h2 className="text-xl font-black">Отзывы</h2>
+              {service.reviews.length > 0 ? (
+                <div className="mt-4 grid gap-3">
+                  {service.reviews.map((review, index) => (
+                    <blockquote key={`${service.id}-${index}`} className="rounded-lg border border-line bg-white/5 p-4">
+                      <div className="flex gap-1 text-rose">
+                        {Array.from({ length: review.rating }).map((_, starIndex) => (
+                          <Star key={starIndex} className="size-4 fill-current" />
+                        ))}
+                      </div>
+                      <p className="mt-3 text-sm leading-6 text-white/62">«{review.text}»</p>
+                    </blockquote>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-3 text-sm text-white/48">Отзывов пока нет. Эта услуга ожидает первых заказов.</p>
+              )}
+            </div>
+          </div>
+        </article>
+
+        <aside className="space-y-4 lg:sticky lg:top-28 lg:h-fit">
+          <div className="rounded-lg border border-line bg-white/8 p-5 shadow-card backdrop-blur">
+            <p className="text-sm text-white/50">Стоимость услуги</p>
+            <p className="mt-1 text-4xl font-black">{money(service.price)}</p>
+            <div className="mt-5 grid gap-3">
+              <button className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-3 text-sm font-black text-ink transition hover:scale-[1.02]">
+                Купить услугу <ChevronRight className="size-4" />
+              </button>
+              <a
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-line bg-white/8 px-4 py-3 text-sm font-black text-white transition hover:bg-white/14"
+                href={SUPPORT_URL}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Написать в поддержку <LifeBuoy className="size-4" />
+              </a>
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-line bg-white/8 p-5 shadow-card backdrop-blur">
+            <h2 className="text-lg font-black">Продавец</h2>
+            <div className="mt-4 flex items-center gap-3">
+              <span className="grid size-12 place-items-center rounded-lg bg-gradient-to-br from-violet via-electric to-rose text-sm font-black">
+                {service.ownerName.slice(0, 2).toUpperCase()}
+              </span>
+              <div>
+                <div className="flex items-center gap-2 font-black">
+                  {service.ownerName}
+                  <BadgeCheck className="size-4 text-electric" />
+                </div>
+                <p className="mt-1 text-xs text-white/48">Проверенный продавец • {service.orders} заказов</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-line bg-white/8 p-5 shadow-card backdrop-blur">
+            <h2 className="text-lg font-black">Похожие услуги</h2>
+            <div className="mt-4 space-y-3">
+              {relatedServices.map((item) => (
+                <button
+                  key={item.id}
+                  className="w-full rounded-lg border border-line bg-black/18 p-3 text-left transition hover:bg-white/10"
+                  onClick={() => onOpenService(item.id)}
+                >
+                  <span className="block truncate text-sm font-black">{item.title}</span>
+                  <span className="mt-1 block text-xs text-white/48">{money(item.price)} • {item.orders} заказов</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </aside>
+      </section>
+    </div>
+  );
+}
+
+function DetailMetric({ icon, value, label }) {
+  return (
+    <div className="rounded-lg border border-line bg-black/20 p-4">
+      <div className="flex items-center gap-2 text-2xl font-black">
+        {icon}
+        {value}
+      </div>
+      <p className="mt-1 text-xs text-white/48">{label}</p>
+    </div>
   );
 }
 
