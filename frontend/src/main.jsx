@@ -9,6 +9,7 @@ import {
   Clock3,
   CreditCard,
   Flame,
+  Home,
   LayoutDashboard,
   LifeBuoy,
   Megaphone,
@@ -16,11 +17,18 @@ import {
   Plus,
   Search,
   ShieldCheck,
+  ShoppingBag,
   Sparkles,
   Star,
+  Store,
+  ThumbsUp,
   Trash2,
+  TrendingUp,
+  Trophy,
   Users,
-  X
+  WalletCards,
+  X,
+  Zap
 } from "lucide-react";
 import { marketplaceSeed } from "./data/seed";
 import "./styles/globals.css";
@@ -67,6 +75,10 @@ function App() {
 
   const activeAds = ads.filter((ad) => ad.active);
   const pendingCount = services.filter((service) => service.status === "pending").length;
+  const popularServices = services
+    .filter((service) => service.status === "approved")
+    .sort((a, b) => b.orders - a.orders)
+    .slice(0, 3);
 
   function createService(event) {
     event.preventDefault();
@@ -78,6 +90,9 @@ function App() {
         ownerId: "u1",
         ownerName: "Новый продавец",
         ownerRating: 4.8,
+        orders: 0,
+        delivery: "по договоренности",
+        badges: ["Новое"],
         status: "pending",
         reviews: []
       },
@@ -122,11 +137,11 @@ function App() {
   }
 
   return (
-    <main className="min-h-screen overflow-hidden bg-ink text-white">
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(139,92,246,0.26),transparent_28%),radial-gradient(circle_at_82%_10%,rgba(56,189,248,0.18),transparent_26%),radial-gradient(circle_at_50%_80%,rgba(244,114,182,0.13),transparent_30%)]" />
+    <main className="min-h-screen overflow-hidden bg-ink pb-20 text-white lg:pb-0">
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(139,92,246,0.24),transparent_28%),radial-gradient(circle_at_82%_10%,rgba(56,189,248,0.18),transparent_26%),radial-gradient(circle_at_50%_84%,rgba(244,114,182,0.12),transparent_30%)]" />
       <div className="relative mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 py-4 sm:gap-6 sm:px-6 lg:px-8">
         <TopNav pendingCount={pendingCount} activeView={activeView} setActiveView={setActiveView} />
-        <Hero activeAds={activeAds} />
+        <Hero activeAds={activeAds} setActiveView={setActiveView} />
         <Stats />
         <Tabs activeView={activeView} setActiveView={setActiveView} />
 
@@ -137,13 +152,26 @@ function App() {
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
-              className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]"
+              className="space-y-6"
             >
-              <div className="min-w-0 space-y-5">
-                <CategoryRail selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} />
-                <ServiceGrid services={approvedServices} />
+              <MarketplaceHighlights
+                popularServices={popularServices}
+                sellers={marketplaceSeed.sellers}
+                testimonials={marketplaceSeed.testimonials}
+                activeAds={activeAds}
+              />
+              <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+                <div className="min-w-0 space-y-5">
+                  <SectionHeader
+                    eyebrow="Каталог"
+                    title="Услуги маркетплейса"
+                    text="Выбирайте проверенные предложения по продвижению, аккаунтам и рекламе."
+                  />
+                  <CategoryRail selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} />
+                  <ServiceGrid services={approvedServices} />
+                </div>
+                <CreateServicePanel draft={draft} setDraft={setDraft} createService={createService} />
               </div>
-              <CreateServicePanel draft={draft} setDraft={setDraft} createService={createService} />
             </motion.section>
           )}
 
@@ -193,6 +221,7 @@ function App() {
 
         <Footer setActiveView={setActiveView} />
       </div>
+      <MobileBottomNav activeView={activeView} setActiveView={setActiveView} pendingCount={pendingCount} />
     </main>
   );
 }
@@ -277,39 +306,42 @@ function TextLinkButton({ label, href, children }) {
   );
 }
 
-function Hero({ activeAds }) {
+function Hero({ activeAds, setActiveView }) {
   const primaryAd = activeAds[0];
   return (
-    <section className="grid min-h-[420px] overflow-hidden rounded-lg border border-line bg-[linear-gradient(135deg,rgba(17,19,34,0.94),rgba(14,15,27,0.62)),url('https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1800&q=80')] bg-cover bg-center shadow-glow lg:grid-cols-[1.15fr_0.85fr]">
+    <section className="relative grid min-h-[520px] overflow-hidden rounded-lg border border-line bg-[linear-gradient(135deg,rgba(8,9,20,0.96),rgba(14,15,27,0.68)),url('https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1800&q=80')] bg-cover bg-center shadow-glow lg:grid-cols-[1.08fr_0.92fr]">
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/50 to-transparent" />
       <div className="flex flex-col justify-between gap-8 p-5 sm:p-8 lg:p-10">
         <div className="flex w-fit items-center gap-2 rounded-full border border-line bg-white/10 px-3 py-1 text-xs font-semibold text-white/75 backdrop-blur">
           <Flame className="size-4 text-rose" />
-          Премиальный маркетплейс услуг
+          Premium marketplace для digital-услуг
         </div>
         <div className="max-w-3xl">
-          <h1 className="text-4xl font-black leading-[0.98] sm:text-6xl lg:text-7xl">PulseMarket</h1>
+          <h1 className="max-w-4xl text-4xl font-black leading-[0.98] sm:text-6xl lg:text-7xl">
+            Покупайте продвижение и аккаунты в одном маркетплейсе
+          </h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-white/68 sm:text-lg">
-            Платформа для продвижения TikTok, YouTube и Instagram, продажи YouTube-аккаунтов,
-            платных объявлений, рекламных баннеров и модерируемых услуг продавцов.
+            PulseMarket объединяет услуги TikTok, YouTube, Instagram, продажу YouTube-аккаунтов,
+            платные объявления и рекламные баннеры с модерацией и поддержкой в Telegram.
           </p>
         </div>
         <div className="grid gap-3 sm:flex sm:flex-wrap">
-          <a className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-3 text-sm font-bold text-ink transition hover:scale-[1.02]" href="#services">
-            Смотреть услуги <ChevronRight className="size-4" />
-          </a>
-          <a className="inline-flex items-center justify-center gap-2 rounded-lg border border-line bg-white/10 px-4 py-3 text-sm font-bold text-white transition hover:bg-white/16" href={SUPPORT_URL} target="_blank" rel="noreferrer">
-            Поддержка <LifeBuoy className="size-4" />
-          </a>
-          <a className="inline-flex items-center justify-center gap-2 rounded-lg border border-line bg-white/10 px-4 py-3 text-sm font-bold text-white transition hover:bg-white/16" href={COMMUNITY_URL} target="_blank" rel="noreferrer">
-            Сообщество <Users className="size-4" />
+          <button
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-black text-ink transition hover:scale-[1.02]"
+            onClick={() => setActiveView("market")}
+          >
+            Перейти в маркетплейс <ChevronRight className="size-4" />
+          </button>
+          <a className="inline-flex items-center justify-center gap-2 rounded-lg border border-line bg-white/10 px-5 py-3 text-sm font-black text-white transition hover:bg-white/16" href={SUPPORT_URL} target="_blank" rel="noreferrer">
+            Связаться с поддержкой <LifeBuoy className="size-4" />
           </a>
         </div>
       </div>
-      <div className="flex items-end p-4 sm:p-6 lg:p-8">
+      <div className="grid content-end gap-4 p-4 sm:p-6 lg:p-8">
         <motion.div
           initial={{ opacity: 0, y: 28 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full rounded-lg border border-line bg-black/35 p-5 backdrop-blur-xl"
+          className="rounded-lg border border-line bg-black/38 p-5 backdrop-blur-xl"
         >
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <span className="text-sm font-bold text-white/75">Рекламный баннер в ротации</span>
@@ -322,8 +354,22 @@ function Hero({ activeAds }) {
             {primaryAd?.copy ?? "Запустите премиальное размещение с управляемой ротацией в админ-панели."}
           </p>
         </motion.div>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <HeroMetric value="4.8/5" label="средний рейтинг" />
+          <HeroMetric value="48ч" label="реклама на главной" />
+          <HeroMetric value="250₽" label="размещение услуги" />
+        </div>
       </div>
     </section>
+  );
+}
+
+function HeroMetric({ value, label }) {
+  return (
+    <div className="rounded-lg border border-line bg-white/9 p-4 backdrop-blur">
+      <p className="text-2xl font-black">{value}</p>
+      <p className="mt-1 text-xs text-white/52">{label}</p>
+    </div>
   );
 }
 
@@ -337,11 +383,15 @@ function Stats() {
   return (
     <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {stats.map(([label, value, Icon]) => (
-        <div key={label} className="rounded-lg border border-line bg-white/7 p-4 shadow-card backdrop-blur">
+        <motion.div
+          key={label}
+          whileHover={{ y: -3 }}
+          className="rounded-lg border border-line bg-white/7 p-4 shadow-card backdrop-blur"
+        >
           <Icon className="mb-4 size-5 text-electric" />
           <p className="text-sm text-white/50">{label}</p>
           <p className="mt-1 text-2xl font-black">{value}</p>
-        </div>
+        </motion.div>
       ))}
     </section>
   );
@@ -371,6 +421,154 @@ function Tabs({ activeView, setActiveView }) {
   );
 }
 
+function MarketplaceHighlights({ popularServices, sellers, testimonials, activeAds }) {
+  return (
+    <div className="space-y-6">
+      <PlatformAdvantages />
+      <PromoBanner ad={activeAds[0]} />
+      <section className="grid gap-5 xl:grid-cols-[1fr_0.85fr]">
+        <PopularServices services={popularServices} />
+        <NewSellers sellers={sellers} />
+      </section>
+      <Testimonials testimonials={testimonials} />
+    </div>
+  );
+}
+
+function SectionHeader({ eyebrow, title, text }) {
+  return (
+    <div>
+      <p className="text-sm font-black uppercase tracking-[0.18em] text-electric">{eyebrow}</p>
+      <h2 className="mt-2 text-2xl font-black sm:text-3xl">{title}</h2>
+      {text && <p className="mt-2 max-w-2xl text-sm leading-6 text-white/56">{text}</p>}
+    </div>
+  );
+}
+
+function PlatformAdvantages() {
+  const items = [
+    ["Проверенные продавцы", "Модерация услуг перед публикацией.", ShieldCheck],
+    ["Быстрая витрина", "Категории, поиск, лента и баннеры в одном UI.", Zap],
+    ["Готово к платежам", "Архитектура уже учитывает оплату и будущий escrow.", WalletCards]
+  ];
+  return (
+    <section className="grid gap-4 md:grid-cols-3">
+      {items.map(([title, text, Icon]) => (
+        <motion.article
+          key={title}
+          whileHover={{ y: -4 }}
+          className="rounded-lg border border-line bg-white/8 p-5 shadow-card backdrop-blur"
+        >
+          <span className="grid size-11 place-items-center rounded-lg bg-gradient-to-br from-violet via-electric to-rose">
+            <Icon className="size-5" />
+          </span>
+          <h3 className="mt-5 text-lg font-black">{title}</h3>
+          <p className="mt-2 text-sm leading-6 text-white/56">{text}</p>
+        </motion.article>
+      ))}
+    </section>
+  );
+}
+
+function PromoBanner({ ad }) {
+  return (
+    <section className="grid gap-5 overflow-hidden rounded-lg border border-line bg-[linear-gradient(135deg,rgba(139,92,246,0.22),rgba(56,189,248,0.14),rgba(244,114,182,0.18))] p-5 shadow-card backdrop-blur md:grid-cols-[1fr_auto] md:items-center">
+      <div>
+        <div className="flex w-fit items-center gap-2 rounded-full border border-white/15 bg-black/18 px-3 py-1 text-xs font-bold text-white/68">
+          <Megaphone className="size-4 text-rose" />
+          Рекламное размещение
+        </div>
+        <h2 className="mt-4 text-2xl font-black">{ad?.title ?? "Баннер на главной странице"}</h2>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-white/62">
+          {ad?.copy ?? "Покажите услугу или продавца в самом заметном блоке маркетплейса."}
+        </p>
+      </div>
+      <div className="rounded-lg border border-line bg-black/20 p-4 text-left md:min-w-56">
+        <p className="text-sm text-white/50">Стоимость</p>
+        <p className="mt-1 text-3xl font-black">2500 ₽</p>
+        <p className="mt-1 text-xs text-white/48">48 часов ротации</p>
+      </div>
+    </section>
+  );
+}
+
+function PopularServices({ services }) {
+  return (
+    <section className="rounded-lg border border-line bg-white/7 p-5 shadow-card backdrop-blur">
+      <SectionHeader eyebrow="Тренды" title="Популярные услуги" text="Предложения с высоким рейтингом и количеством заказов." />
+      <div className="mt-5 grid gap-3">
+        {services.map((service, index) => (
+          <div key={service.id} className="grid gap-3 rounded-lg border border-line bg-black/18 p-4 sm:grid-cols-[auto_1fr_auto] sm:items-center">
+            <span className="grid size-10 place-items-center rounded-lg bg-white text-sm font-black text-ink">
+              {index + 1}
+            </span>
+            <div className="min-w-0">
+              <h3 className="truncate font-black">{service.title}</h3>
+              <p className="mt-1 text-xs text-white/48">{service.orders} заказов • {service.delivery}</p>
+            </div>
+            <span className="text-lg font-black">{money(service.price)}</span>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function NewSellers({ sellers }) {
+  return (
+    <section className="rounded-lg border border-line bg-white/7 p-5 shadow-card backdrop-blur">
+      <SectionHeader eyebrow="Продавцы" title="Новые продавцы" text="Профили, которые уже выглядят как полноценная витрина." />
+      <div className="mt-5 space-y-3">
+        {sellers.map((seller) => (
+          <div key={seller.id} className="flex items-center justify-between gap-3 rounded-lg border border-line bg-black/18 p-4">
+            <div className="flex min-w-0 items-center gap-3">
+              <span className="grid size-11 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-violet via-electric to-rose text-sm font-black">
+                {seller.name.slice(0, 2).toUpperCase()}
+              </span>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <h3 className="truncate font-black">{seller.name}</h3>
+                  {seller.verified && <BadgeCheck className="size-4 shrink-0 text-electric" />}
+                </div>
+                <p className="mt-1 truncate text-xs text-white/48">{seller.role}</p>
+              </div>
+            </div>
+            <div className="text-right text-xs text-white/52">
+              <p className="font-bold text-white">{seller.rating}</p>
+              <p>{seller.orders} заказов</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function Testimonials({ testimonials }) {
+  return (
+    <section>
+      <SectionHeader eyebrow="Доверие" title="Отзывы клиентов" text="Социальное доказательство для презентации marketplace MVP." />
+      <div className="mt-5 grid gap-4 md:grid-cols-3">
+        {testimonials.map((item) => (
+          <motion.article
+            key={item.id}
+            whileHover={{ y: -4 }}
+            className="rounded-lg border border-line bg-white/8 p-5 shadow-card backdrop-blur"
+          >
+            <div className="flex gap-1 text-rose">
+              {Array.from({ length: item.rating }).map((_, index) => (
+                <Star key={index} className="size-4 fill-current" />
+              ))}
+            </div>
+            <p className="mt-4 text-sm leading-6 text-white/62">«{item.text}»</p>
+            <p className="mt-5 font-black">{item.name}</p>
+          </motion.article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function CategoryRail({ selectedCategory, setSelectedCategory }) {
   return (
     <div id="services" className="flex gap-2 overflow-x-auto pb-1">
@@ -395,48 +593,82 @@ function ServiceGrid({ services }) {
   return (
     <div className="grid gap-4 md:grid-cols-2">
       {services.map((service) => (
-        <motion.article
-          key={service.id}
-          whileHover={{ y: -4 }}
-          className="rounded-lg border border-line bg-white/8 p-5 shadow-card backdrop-blur"
-        >
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <span className="rounded-full bg-violet/18 px-3 py-1 text-xs font-bold text-violet">
-              {service.category}
-            </span>
-            <span className="text-xl font-black">{money(service.price)}</span>
-          </div>
-          <h3 className="mt-4 text-xl font-black">{service.title}</h3>
-          <p className="mt-2 min-h-16 text-sm leading-6 text-white/62">{service.description}</p>
-          <div className="mt-5 flex flex-col gap-4 border-t border-line pt-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <div className="flex items-center gap-2 text-sm font-bold">
-                {service.ownerName}
-                <BadgeCheck className="size-4 text-electric" />
-              </div>
-              <div className="mt-1 flex items-center gap-1 text-xs text-white/50">
-                <Star className="size-3 fill-rose text-rose" /> {service.ownerRating}
-                <span>• {service.reviews.length} отзывов</span>
-              </div>
-            </div>
-            <button className="rounded-lg bg-gradient-to-r from-violet via-electric to-rose px-4 py-2 text-sm font-black text-white transition hover:scale-[1.03]">
-              Купить
-            </button>
-          </div>
-          {service.reviews[0] && (
-            <blockquote className="mt-4 rounded-lg border border-line bg-black/20 p-3 text-sm text-white/58">
-              «{service.reviews[0].text}»
-            </blockquote>
-          )}
-        </motion.article>
+        <ServiceCard key={service.id} service={service} />
       ))}
+    </div>
+  );
+}
+
+function ServiceCard({ service }) {
+  return (
+    <motion.article
+      whileHover={{ y: -5 }}
+      className="group overflow-hidden rounded-lg border border-line bg-white/8 shadow-card backdrop-blur transition hover:border-white/24 hover:bg-white/10"
+    >
+      <div className="h-2 bg-gradient-to-r from-violet via-electric to-rose" />
+      <div className="p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <span className="rounded-full bg-violet/18 px-3 py-1 text-xs font-bold text-violet">
+            {service.category}
+          </span>
+          <span className="text-xl font-black">{money(service.price)}</span>
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {service.badges.map((badge) => (
+            <Badge key={badge} label={badge} />
+          ))}
+        </div>
+        <h3 className="mt-4 text-xl font-black">{service.title}</h3>
+        <p className="mt-2 min-h-16 text-sm leading-6 text-white/62">{service.description}</p>
+        <div className="mt-5 grid grid-cols-3 gap-2 rounded-lg border border-line bg-black/18 p-3 text-center">
+          <MiniStat icon={<Star className="size-4 fill-rose text-rose" />} value={service.ownerRating} label="рейтинг" />
+          <MiniStat icon={<ShoppingBag className="size-4 text-electric" />} value={service.orders} label="заказов" />
+          <MiniStat icon={<Clock3 className="size-4 text-violet" />} value={service.delivery} label="срок" />
+        </div>
+        <div className="mt-5 flex flex-col gap-4 border-t border-line pt-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2 text-sm font-bold">
+              {service.ownerName}
+              <BadgeCheck className="size-4 text-electric" />
+            </div>
+            <p className="mt-1 text-xs text-white/48">{service.reviews.length} отзывов</p>
+          </div>
+          <button className="rounded-lg bg-gradient-to-r from-violet via-electric to-rose px-4 py-2 text-sm font-black text-white transition group-hover:scale-[1.03]">
+            Купить
+          </button>
+        </div>
+        {service.reviews[0] && (
+          <blockquote className="mt-4 rounded-lg border border-line bg-black/20 p-3 text-sm text-white/58">
+            «{service.reviews[0].text}»
+          </blockquote>
+        )}
+      </div>
+    </motion.article>
+  );
+}
+
+function Badge({ label }) {
+  const Icon = label === "Топ" ? Trophy : label === "Новое" ? TrendingUp : BadgeCheck;
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full border border-line bg-white/7 px-2.5 py-1 text-xs font-bold text-white/68">
+      <Icon className="size-3.5 text-electric" />
+      {label}
+    </span>
+  );
+}
+
+function MiniStat({ icon, value, label }) {
+  return (
+    <div className="min-w-0">
+      <div className="flex items-center justify-center gap-1 text-sm font-black">{icon}<span className="truncate">{value}</span></div>
+      <p className="mt-1 text-[11px] text-white/42">{label}</p>
     </div>
   );
 }
 
 function CreateServicePanel({ draft, setDraft, createService }) {
   return (
-    <aside className="h-fit rounded-lg border border-line bg-white/8 p-5 shadow-card backdrop-blur-xl">
+    <aside className="h-fit rounded-lg border border-line bg-white/8 p-5 shadow-card backdrop-blur-xl xl:sticky xl:top-28">
       <div className="mb-5 flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-xl font-black">Создать услугу</h2>
         <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-white/62">250 ₽</span>
@@ -476,6 +708,7 @@ function Field({ label, children }) {
 function Feed({ posts, deletePost }) {
   return (
     <div className="space-y-4">
+      <SectionHeader eyebrow="Лента" title="Платные объявления" text="Социальная лента marketplace для быстрых предложений и обновлений продавцов." />
       {posts.map((post) => (
         <article key={post.id} className="rounded-lg border border-line bg-white/8 p-5 shadow-card backdrop-blur">
           <div className="flex flex-wrap items-start justify-between gap-3">
@@ -612,6 +845,32 @@ function Footer({ setActiveView }) {
         </a>
       </div>
     </footer>
+  );
+}
+
+function MobileBottomNav({ activeView, setActiveView, pendingCount }) {
+  const items = [
+    ["market", "Главная", Home],
+    ["feed", "Лента", Store],
+    ["admin", "Админ", LayoutDashboard],
+    ["contacts", "Контакты", LifeBuoy]
+  ];
+  return (
+    <nav className="fixed inset-x-3 bottom-3 z-30 grid grid-cols-4 gap-1 rounded-lg border border-line bg-ink/88 p-1 shadow-glow backdrop-blur-xl lg:hidden">
+      {items.map(([id, label, Icon]) => (
+        <button
+          key={id}
+          className={`relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-md text-[11px] font-bold transition ${
+            activeView === id ? "bg-white text-ink" : "text-white/58"
+          }`}
+          onClick={() => setActiveView(id)}
+        >
+          <Icon className="size-4" />
+          {label}
+          {id === "admin" && pendingCount > 0 && <CounterBadge count={pendingCount} />}
+        </button>
+      ))}
+    </nav>
   );
 }
 

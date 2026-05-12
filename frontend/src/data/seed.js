@@ -9,6 +9,9 @@ export const marketplaceSeed = {
       ownerId: "u1",
       ownerName: "ViralDesk",
       ownerRating: 4.9,
+      orders: 184,
+      delivery: "2-3 дня",
+      badges: ["Проверен", "Топ"],
       status: "approved",
       reviews: [{ rating: 5, text: "Быстрое выполнение и понятный отчет по аналитике." }]
     },
@@ -21,6 +24,9 @@ export const marketplaceSeed = {
       ownerId: "u2",
       ownerName: "ChannelVault",
       ownerRating: 4.7,
+      orders: 63,
+      delivery: "1 день",
+      badges: ["Проверен"],
       status: "approved",
       reviews: [{ rating: 5, text: "Передача аккаунта прошла прозрачно и спокойно." }]
     },
@@ -33,6 +39,9 @@ export const marketplaceSeed = {
       ownerId: "u3",
       ownerName: "ReelPilot",
       ownerRating: 4.8,
+      orders: 119,
+      delivery: "24 часа",
+      badges: ["Новое", "Проверен"],
       status: "approved",
       reviews: [{ rating: 4, text: "Хороший результат для короткой кампании." }]
     },
@@ -45,6 +54,9 @@ export const marketplaceSeed = {
       ownerId: "u4",
       ownerName: "ShortsLab",
       ownerRating: 5,
+      orders: 42,
+      delivery: "3 дня",
+      badges: ["Топ"],
       status: "pending",
       reviews: []
     }
@@ -81,6 +93,31 @@ export const marketplaceSeed = {
       copy: "Рекламный баннер для продавцов YouTube-аккаунтов с горячей аудиторией покупателей.",
       active: true,
       price: 2500
+    }
+  ],
+  sellers: [
+    { id: "u1", name: "ViralDesk", role: "TikTok продвижение", rating: 4.9, orders: 184, verified: true },
+    { id: "u2", name: "ChannelVault", role: "YouTube аккаунты", rating: 4.7, orders: 63, verified: true },
+    { id: "u3", name: "ReelPilot", role: "Instagram Reels", rating: 4.8, orders: 119, verified: true }
+  ],
+  testimonials: [
+    {
+      id: "t1",
+      name: "Артем",
+      text: "Удобный формат: сразу видно продавца, рейтинг, цену и условия. Для MVP выглядит убедительно.",
+      rating: 5
+    },
+    {
+      id: "t2",
+      name: "Марина",
+      text: "Нравится, что услуги проходят модерацию, а поддержка вынесена в Telegram.",
+      rating: 5
+    },
+    {
+      id: "t3",
+      name: "Илья",
+      text: "Похоже на настоящий marketplace: есть категории, объявления, реклама и админка.",
+      rating: 4
     }
   ]
 };
